@@ -16,7 +16,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Relay Service API",
+        Title = "Relay Router API",
         Version = "v1"
     });
 });
