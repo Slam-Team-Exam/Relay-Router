@@ -37,18 +37,18 @@ jobs:
     - name: Publish .NET project
       working-directory: ./RelayRouter
       run: dotnet publish -c Release -o ./publish
-
+      
     - name: Log in to Docker Hub
       run: echo "${{ secrets.docker_hub_pass }}" | docker login -u "${{ secrets.docker_hub_name }}" --password-stdin
 
     - name: Build Docker image
-      working-directory: ./RelayService
+      working-directory: ./RelayRouter
       run: |
         docker build . -f Dockerfile \
-          -t ${{ secrets.docker_hub_name }}/relay-service:${VERSION} \
-          -t ${{ secrets.docker_hub_name }}/relay-service:latest
+          -t ${{ secrets.docker_hub_name }}/relay-router:${VERSION} \
+          -t ${{ secrets.docker_hub_name }}/relay-router:latest
 
     - name: Push Docker image
       run: |
-        docker push ${{ secrets.docker_hub_name }}/relay-service:${VERSION}
-        docker push ${{ secrets.docker_hub_name }}/relay-service:latest
+        docker push ${{ secrets.docker_hub_name }}/relay-router:${VERSION}
+        docker push ${{ secrets.docker_hub_name }}/relay-router:latest
