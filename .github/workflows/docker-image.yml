@@ -1,0 +1,54 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Check .NET project version
+      working-directory: ./RelayRouter
+      run: |
+        VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" RelayRouter.csproj)
+        echo "Found project version: $VERSION"
+        if [ -z "$VERSION" ]; then
+          echo "No <Version> found in RelayRouter.csproj!"
+          exit 1
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Build .NET project
+      working-directory: ./RelayRouter
+      run: dotnet build --configuration Release
+
+    - name: Publish .NET project
+      working-directory: ./RelayRouter
+      run: dotnet publish -c Release -o ./publish
+      
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.docker_hub_pass }}" | docker login -u "${{ secrets.docker_hub_name }}" --password-stdin
+
+    - name: Build Docker image
+      working-directory: ./RelayRouter
+      run: |
+        docker build . -f Dockerfile \
+          -t ${{ secrets.docker_hub_name }}/relay-router:${VERSION} \
+          -t ${{ secrets.docker_hub_name }}/relay-router:latest
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.docker_hub_name }}/relay-router:${VERSION}
+        docker push ${{ secrets.docker_hub_name }}/relay-router:latest
